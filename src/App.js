@@ -9,6 +9,7 @@ import Devices from "./pages/Devices";
 import Orders from "./pages/Orders";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import LoginPage from "./pages/LoginPage";
 
 function App() {
   const [isSidebarActive, setSidebarActive] = useState(false);
@@ -29,41 +30,53 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <SideMenu
-        closeMobileSidebar={closeMobileSidebar}
-        isSidebarActive={isSidebarActive}
-        isMobileSidebarOpen={isMobileSidebarOpen}
-      />
-      <main className={`dashboard-main ${isSidebarActive ? "active" : ""}`}>
-        <HeaderBar
-          toggleSidebar={toggleSidebar}
-          openMobileSidebar={openMobileSidebar}
-          closeMobileSidebar={closeMobileSidebar}
-          isSidebarActive={isSidebarActive}
-          isMobileSidebarOpen={isMobileSidebarOpen}
-        />
-        {/* <Home /> */}
-        <Router>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/devices" element={<Devices />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </Router>
+    <Router>
+      <Routes>
+        {/* Separate Login Route */}
+        <Route path="/login" element={<LoginPage />} />
 
-        <footer class="d-footer">
-          <div class="row align-items-center justify-content-between">
-            <div class="col-auto">
-              <p class="mb-0"> 2024@copyrights</p>
+        {/* Routes that use the main app layout */}
+        <Route
+          path="/*"
+          element={
+            <div className="App">
+              <SideMenu
+                closeMobileSidebar={closeMobileSidebar}
+                isSidebarActive={isSidebarActive}
+                isMobileSidebarOpen={isMobileSidebarOpen}
+              />
+              <main
+                className={`dashboard-main ${isSidebarActive ? "active" : ""}`}
+              >
+                <HeaderBar
+                  toggleSidebar={toggleSidebar}
+                  openMobileSidebar={openMobileSidebar}
+                  closeMobileSidebar={closeMobileSidebar}
+                  isSidebarActive={isSidebarActive}
+                  isMobileSidebarOpen={isMobileSidebarOpen}
+                />
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/customers" element={<Customers />} />
+                  <Route path="/devices" element={<Devices />} />
+                  <Route path="/orders" element={<Orders />} />
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Routes>
+
+                <footer className="d-footer">
+                  <div className="row align-items-center justify-content-between">
+                    <div className="col-auto">
+                      <p className="mb-0">2024 © copyrights</p>
+                    </div>
+                  </div>
+                </footer>
+              </main>
             </div>
-          </div>
-        </footer>
-      </main>
-    </div>
+          }
+        />
+      </Routes>
+    </Router>
   );
 }
 
