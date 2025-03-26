@@ -1,5 +1,14 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import * as OrderServices from "../api/orderServices";
+
+const ORDER_STATUSES = {
+  ORDERED: { label: "Ordered", value: "ORDERED" },
+  ORDER_CONFIRMED: { label: "Order Confirmed", value: "ORDER_CONFIRMED" },
+  OUT_OF_DELIVERY: { label: "Out of Delivery", value: "OUT_OF_DELIVERY" },
+  DELIVERED: { label: "Delivered", value: "DELIVERED" },
+  CANCELLED: { label: "Cancelled", value: "CANCELLED" },
+};
 
 function OrderUpdateForm(props) {
   const {
@@ -8,61 +17,59 @@ function OrderUpdateForm(props) {
     formState: { errors },
   } = useForm();
 
-  function onSubmit(formData) {
-    console.log("Updated Data:", formData);
-    alert("Form updated successfully!");
-    // e.preventDefault();
-
-    // props.toggle();
+  async function onSubmit(formData) {
+    try {
+      const response = await OrderServices.updateOrderStatus(
+        props.orderId,
+        formData.orderStatus
+      );
+      console.log("Updated Data:", response);
+      alert("Form updated successfully!");
+      handleSubmit();
+      props.toggle(); // Close the popup after successful update
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      alert("Failed to update order status. Please try again.");
+    }
   }
 
   function closePopup(e) {
     e.preventDefault();
     props.toggle();
   }
+
   return (
     <div className="popup">
       <div className="popup-inner">
         <div className="popup-header d-flex justify-content-between align-items-center">
           <div className="header-title">View And Update Order</div>
           <button
-            class="has-indicator w-40-px h-40-px bg-neutral-200 rounded-circle d-flex justify-content-center align-items-center m-0"
+            className="has-indicator w-40-px h-40-px bg-neutral-200 rounded-circle d-flex justify-content-center align-items-center m-0"
             type="button"
             onClick={closePopup}
           >
             <iconify-icon
               icon="iconoir:xmark"
-              class="text-primary-light text-xl"
+              className="text-primary-light text-xl"
             ></iconify-icon>
           </button>
         </div>
         <form onSubmit={handleSubmit(onSubmit)}>
-          {/* OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO */}
-          <div className="xxl-12">Order ID:23451234567892345</div>
+          {/* <div className="xxl-12">Order ID: {props.orderId}</div> */}
           <div className="xxl-12 fs-6 fw-bolder">Order Status</div>
           <div className="d-flex mt-6">
-            <input type="checkbox" id="switch" name="hai" />
-            <label for="switch" className="m-0">
-              Toggle
-            </label>
-            <p className="my-0 mx-8">toogle switch</p>
+            <select
+              {...register("orderStatus")}
+              defaultValue={ORDER_STATUSES.ORDERED.value}
+              className="form-select"
+            >
+              {Object.values(ORDER_STATUSES).map((status) => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
+            </select>
           </div>
-          <div className="d-flex mt-6">
-            <input type="checkbox" id="switch" name="hai" />
-            <label for="switch" className="m-0">
-              Toggle
-            </label>
-            <p className="my-0 mx-8">Out For Delivery</p>
-          </div>
-          <div className="d-flex mt-6">
-            <input type="checkbox" id="switch" name="hai" />
-            <label for="switch" className="m-0">
-              Toggle
-            </label>
-            <p className="my-0 mx-8">Delivered</p>
-          </div>
-          {/* OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO */}
-
           <div
             className="popup-footer d-flex justify-content-end align-items-center"
             style={{ minWidth: "640px" }}

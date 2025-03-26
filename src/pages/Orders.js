@@ -1,39 +1,113 @@
-import React, { useState } from "react";
-import { SlArrowRight } from "react-icons/sl";
+import React, { useState, useEffect, useTransition, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import IconRightButton from "../components/IconRightButton";
 import OrderUpdateForm from "../screens/OrderUpdateForm";
+
+import * as OrderServices from "../api/orderServices";
+
 const Orders = () => {
-  // State to keep track of the active tab
-  const [activeTab, setActiveTab] = useState("tab1");
-  const [orderTypeTab, setOrderTypeTab] = useState("tab1");
+  const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+  const twoDaysAgo = new Date();
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+  const formattedTwoDaysAgo = twoDaysAgo.toISOString().split("T")[0]; // Get date 2 days ago in YYYY-MM-DD format
 
+  const [activeTab, setActiveTab] = useState("Lpg");
+  const [orderTypeTab, setOrderTypeTab] = useState("Lpg");
   const [openOrderUpdate, setOpenOrderUpdate] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState(null); // State to store selected order ID
+  const [startDate, setStartDate] = useState(formattedTwoDaysAgo); // Set default start date to 2 days ago
+  const [endDate, setEndDate] = useState(today); // Set default end date to today
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [listLoading, listLoader] = useTransition();
+  const [orderList, setOrderList] = useState([]);
 
-  // Function to handle tab change
+  const queryParams = new URLSearchParams(location.search);
+
+  const fetchOrders = async () => {
+    console.log("Location changed");
+
+    const status = queryParams.get("status") || undefined;
+
+    const startDate = queryParams.get("startDate");
+    const endDate = queryParams.get("endDate");
+    const resourceType = queryParams.get("resourceType");
+    const page = queryParams.get("page");
+    // const pageSize = queryParams.get("pageSize") ?? 15;
+
+    // console.log("pages", page, pageSize);
+
+    const response = await OrderServices.getOrders({
+      status: status || "",
+      startDate: startDate || "2025-03-12",
+      endDate: endDate || "2025-03-14",
+      resourceType: resourceType || undefined,
+      page: page || 1,
+      pageSize: 15,
+    });
+
+    setOrderList(response.orders);
+
+    // Handle the query parameters as needed
+    console.log({ status, startDate, endDate, resourceType, page });
+    // console.log(response);
+  };
+
+  useEffect(() => {
+    if (!listLoading) {
+      listLoader(fetchOrders);
+      //   hasFetchedOrders.current = true;
+    }
+  }, [location.search]);
+
+  const updateURL = (params) => {
+    const queryParams = new URLSearchParams(params).toString();
+    navigate(`?${queryParams}`);
+  };
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    tab = tab === "All" ? "" : tab;
+    updateURL({ resourceType: tab, startDate, endDate });
   };
+
   const handleOrderTabChange = (tab) => {
+    console.log("Order tab changed to", tab);
     setOrderTypeTab(tab);
+    updateURL({ resourceType: activeTab, startDate, endDate, status: tab });
   };
-  function togglePop() {
+
+  const handleDateChange = (start, end) => {
+    setStartDate(start);
+    setEndDate(end);
+    updateURL({ resourceType: activeTab, startDate: start, endDate: end });
+  };
+
+  const togglePop = (orderId) => {
+    setSelectedOrderId(orderId); // Set the selected order ID
     setOpenOrderUpdate(!openOrderUpdate);
-  }
+  };
+
   return (
-    <div class="dashboard-main-body">
-      {openOrderUpdate ? <OrderUpdateForm toggle={togglePop} /> : null}
+    <div className="dashboard-main-body">
+      {openOrderUpdate && (
+        <OrderUpdateForm
+          toggle={togglePop}
+          orderId={selectedOrderId}
+          handleSubmit={fetchOrders}
+        />
+      )}
 
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
-        {/* START */}
-        <div style={{ marginBottom: "00px" }}>
+        <div style={{ marginBottom: "0px" }}>
           <button
-            onClick={() => handleTabChange("tab1")}
+            onClick={() => handleTabChange("Lpg")}
             style={{
               padding: "4px 22px",
               marginRight: "10px",
               cursor: "pointer",
-              backgroundColor: activeTab === "tab1" ? "#007bff" : "#ccc",
-              color: activeTab === "tab1" ? "white" : "black",
+              backgroundColor: activeTab === "Lpg" ? "#007bff" : "#ccc",
+              color: activeTab === "Lpg" ? "white" : "black",
               border: "none",
               borderRadius: "5px",
             }}
@@ -41,13 +115,13 @@ const Orders = () => {
             LPG
           </button>
           <button
-            onClick={() => handleTabChange("tab2")}
+            onClick={() => handleTabChange("Water")}
             style={{
               padding: "4px 22px",
               marginRight: "10px",
               cursor: "pointer",
-              backgroundColor: activeTab === "tab2" ? "#007bff" : "#ccc",
-              color: activeTab === "tab2" ? "white" : "black",
+              backgroundColor: activeTab === "Water" ? "#007bff" : "#ccc",
+              color: activeTab === "Water" ? "white" : "black",
               border: "none",
               borderRadius: "5px",
             }}
@@ -55,12 +129,12 @@ const Orders = () => {
             Water
           </button>
           <button
-            onClick={() => handleTabChange("tab3")}
+            onClick={() => handleTabChange("All")}
             style={{
               padding: "4px 22px",
               cursor: "pointer",
-              backgroundColor: activeTab === "tab3" ? "#007bff" : "#ccc",
-              color: activeTab === "tab3" ? "white" : "black",
+              backgroundColor: activeTab === "All" ? "#007bff" : "#ccc",
+              color: activeTab === "All" ? "white" : "black",
               border: "none",
               borderRadius: "5px",
             }}
@@ -68,297 +142,205 @@ const Orders = () => {
             All
           </button>
         </div>
-        {/* END */}
-        {/* <ul className="d-flex align-items-center gap-2">
-          <li className="fw-medium">
-            <a
-              href="index.html"
-              className="d-flex align-items-center gap-1 hover-text-primary"
-            >
-              <iconify-icon
-                icon="solar:home-smile-angle-outline"
-                className="icon text-lg"
-              ></iconify-icon>
-              Customers
-            </a>
-          </li>
-          <li>-</li>
-          <li className="fw-medium">Investment</li> 
-        </ul> */}
 
         <div className="page-search">
-          <div class="navbar-search">
-            <input type="text" name="search" placeholder="Search" />
-            <iconify-icon icon="ion:search-outline" class="icon"></iconify-icon>
+          <div className="row">
+            <div className="col-lg-4">
+              <div className="navbar-search">
+                <input type="text" name="search" placeholder="Search" />
+                <iconify-icon
+                  icon="ion:search-outline"
+                  className="icon"
+                ></iconify-icon>
+              </div>
+            </div>
           </div>
-          <input type="date" name="daterange" placeholder="01/01/2025" />
+
+          <input
+            type="date"
+            name="startDate"
+            value={startDate}
+            onChange={(e) => handleDateChange(e.target.value, endDate)}
+            placeholder="Start Date"
+          />
+          <input
+            type="date"
+            name="endDate"
+            value={endDate}
+            onChange={(e) => handleDateChange(startDate, e.target.value)}
+            placeholder="End Date"
+          />
         </div>
       </div>
 
-      <div class="row gy-4">
-        <div class="col-xxl-3">
-          <div class="card h-100">
-            <div class="card-body p-24">
-              <div class="d-flex align-items-center flex-wrap gap-2 justify-content-between mb-20">
+      <div className="row gy-4">
+        <div className="col-xxl-3">
+          <div className="card h-100">
+            <div className="card-body p-24">
+              <div className="d-flex align-items-center flex-wrap gap-2 justify-content-between mb-20">
+                <IconRightButton
+                  text="All"
+                  activeTabValue={orderTypeTab}
+                  tabValue=""
+                  onClick={() => handleOrderTabChange("")}
+                />
                 <IconRightButton
                   text="New Orders"
                   activeTabValue={orderTypeTab}
-                  tabValue="tab1"
-                  onClick={() => handleOrderTabChange("tab1")}
+                  tabValue="ORDERED"
+                  onClick={() => handleOrderTabChange("ORDERED")}
                 />
-
                 <IconRightButton
-                  text="Order In Process"
+                  text="Order Confirmed"
                   activeTabValue={orderTypeTab}
-                  tabValue="tab2"
-                  onClick={() => handleOrderTabChange("tab2")}
+                  tabValue="ORDER_CONFIRMED"
+                  onClick={() => handleOrderTabChange("ORDER_CONFIRMED")}
                 />
-
                 <IconRightButton
-                  text="Out  For Delivery"
+                  text="Out For Delivery"
                   activeTabValue={orderTypeTab}
-                  tabValue="tab3"
-                  onClick={() => handleOrderTabChange("tab3")}
+                  tabValue="OUT_OF_DELIVERY"
+                  onClick={() => handleOrderTabChange("OUT_OF_DELIVERY")}
                 />
                 <IconRightButton
                   text="Delivered"
                   activeTabValue={orderTypeTab}
-                  tabValue="tab4"
-                  onClick={() => handleOrderTabChange("tab4")}
+                  tabValue="DELIVERED"
+                  onClick={() => handleOrderTabChange("DELIVERED")}
                 />
-              </div>{" "}
-            </div>{" "}
-          </div>{" "}
-        </div>
-
-        <div class="col-xxl-9">
-          <div class="card h-100">
-            <div class="card-body p-24">
-              <div class="d-flex align-items-center flex-wrap gap-2 justify-content-between mb-20">
-                <h6 class="mb-2 fw-bold text-lg mb-0">Latest Notifications</h6>
-                {/* <a
-                href="#"
-                class="text-primary-600 hover-text-primary d-flex align-items-center gap-1"
-              >
-                View All
-                <iconify-icon
-                  icon="solar:alt-arrow-right-linear"
-                  class="icon"
-                ></iconify-icon>
-              </a> */}
-              </div>
-              <div class="table-responsive scroll-sm">
-                <table class="table bordered-table sm-table mb-0">
-                  <thead>
-                    <tr>
-                      <th scope="col">Sl.No</th>
-                      <th scope="col">ORDER ID</th>
-                      <th scope="col">DATE & TIME</th>
-                      <th scope="col">ORDER DETAILS</th>
-                      <th scope="col">QUANTITY </th>
-                      <th scope="col" class="text-center">
-                        UPDATE
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>1</td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">DVS23458987IN</h6>
-                      </td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">John Wick</h6>
-                        <span class="text-sm text-secondary-light fw-normal">
-                          Sample
-                        </span>
-                      </td>
-                      <td>1234 Elm Street, Suite 100</td>
-                      <td>Parameter</td>
-                      <td class="text-center">
-                        {" "}
-                        <button
-                          onClick={togglePop}
-                          style={{
-                            padding: "2px 22px",
-                            cursor: "pointer",
-                            backgroundColor: "#FFFFFF",
-                            color: "#3A36DB",
-                            border: "1px solid #3A36DB",
-                            borderRadius: "5px",
-                            fontSize: "14px",
-                          }}
-                        >
-                          Update
-                        </button>
-                      </td>
-                    </tr>
-
-                    <tr>
-                      <td>2</td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">DVS23458987IN</h6>
-                      </td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">Jane Smith</h6>
-                        <span class="text-sm text-secondary-light fw-normal">
-                          Sample
-                        </span>
-                      </td>
-                      <td>5678 Maple Avenue, Apt. 202,</td>
-                      <td>Parameter</td>
-                      <td class="text-center">
-                        {" "}
-                        <button
-                          onClick={togglePop}
-                          style={{
-                            padding: "2px 22px",
-                            cursor: "pointer",
-                            backgroundColor: "#FFFFFF",
-                            color: "#3A36DB",
-                            border: "1px solid #3A36DB",
-                            borderRadius: "5px",
-                            fontSize: "14px",
-                          }}
-                        >
-                          Update
-                        </button>
-                      </td>
-                    </tr>
-
-                    <tr>
-                      <td>3</td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">DVS23458987IN</h6>
-                      </td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">Michael Johnson</h6>
-                        <span class="text-sm text-secondary-light fw-normal">
-                          Sample
-                        </span>
-                      </td>
-                      <td>1298 oak Street, Suite 100</td>
-                      <td>Parameter</td>
-                      <td class="text-center">
-                        {" "}
-                        <button
-                          onClick={togglePop}
-                          style={{
-                            padding: "2px 22px",
-                            cursor: "pointer",
-                            backgroundColor: "#FFFFFF",
-                            color: "#3A36DB",
-                            border: "1px solid #3A36DB",
-                            borderRadius: "5px",
-                            fontSize: "14px",
-                          }}
-                        >
-                          Update
-                        </button>
-                      </td>
-                    </tr>
-
-                    <tr>
-                      <td>4</td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">DVS23458987IN</h6>
-                      </td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">Emily Davis</h6>
-                        <span class="text-sm text-secondary-light fw-normal">
-                          Sample
-                        </span>
-                      </td>
-                      <td>1234 ref Street, Suite 100</td>
-                      <td>Parameter</td>
-                      <td class="text-center">
-                        {" "}
-                        <button
-                          onClick={togglePop}
-                          style={{
-                            padding: "2px 22px",
-                            cursor: "pointer",
-                            backgroundColor: "#FFFFFF",
-                            color: "#3A36DB",
-                            border: "1px solid #3A36DB",
-                            borderRadius: "5px",
-                            fontSize: "14px",
-                          }}
-                        >
-                          Update
-                        </button>
-                      </td>
-                    </tr>
-
-                    <tr>
-                      <td>5</td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">DVS23458987IN</h6>
-                      </td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">William Brown</h6>
-                        <span class="text-sm text-secondary-light fw-normal">
-                          Sample
-                        </span>
-                      </td>
-                      <td>5555 Birch Lane, Floor 3</td>
-                      <td>Parameter</td>
-                      <td class="text-center">
-                        {" "}
-                        <button
-                          onClick={togglePop}
-                          style={{
-                            padding: "2px 22px",
-                            cursor: "pointer",
-                            backgroundColor: "#FFFFFF",
-                            color: "#3A36DB",
-                            border: "1px solid #3A36DB",
-                            borderRadius: "5px",
-                            fontSize: "14px",
-                          }}
-                        >
-                          Update
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div class="d-flex align-items-center flex-wrap gap-2 justify-content-between mt-20">
-                <h6 class="mb-2 fw-bold text-lg mb-0"></h6>
-                <div class="d-flex align-items-center">
-                  <a
-                    href="#"
-                    class="text-primary-600 hover-text-primary d-flex align-items-center gap-2"
-                  >
-                    <iconify-icon
-                      icon="solar:alt-arrow-left-linear"
-                      class="icon"
-                      style={{ fontSize: "24px" }}
-                    ></iconify-icon>
-                  </a>
-                  <p
-                    class="text-primary-500 hover-text-primary"
-                    style={{ fontSize: "14px", margin: "0px 12px 0px 12px" }}
-                  >
-                    Page 1
-                  </p>
-                  <a
-                    href="#"
-                    class="text-primary-600 hover-text-primary d-flex align-items-center gap-2"
-                  >
-                    <iconify-icon
-                      icon="solar:alt-arrow-right-linear"
-                      class="icon"
-                      style={{ fontSize: "24px" }}
-                    ></iconify-icon>
-                  </a>
-                </div>
+                <IconRightButton
+                  text="Cancelled"
+                  activeTabValue={orderTypeTab}
+                  tabValue="CANCELLED"
+                  onClick={() => handleOrderTabChange("CANCELLED")}
+                />
               </div>
             </div>
           </div>
         </div>
+
+        {listLoading ? (
+          <div className="col-xxl-9 d-flex justify-content-center align-items-center">
+            <div className="spinner-border" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        ) : (
+          <div className="col-xxl-9">
+            <div className="card h-100">
+              <div className="card-body p-24">
+                <div className="d-flex align-items-center flex-wrap gap-2 justify-content-between mb-20">
+                  <h6 className="mb-2 fw-bold text-lg mb-0">
+                    Latest Notifications
+                  </h6>
+                </div>
+                <div className="table-responsive scroll-sm">
+                  <table className="table bordered-table sm-table mb-0">
+                    <thead>
+                      <tr>
+                        <th scope="col">Sl.No</th>
+                        <th scope="col">Date </th>
+                        <th scope="col">Details</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" className="text-center">
+                          Update
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orderList.map((order, index) => (
+                        <tr key={order.id}>
+                          <td>{index + 1}</td>
+                          <td>
+                            {new Date(
+                              order.customerChosenTime
+                            ).toLocaleString()}
+                          </td>
+                          <td>
+                            {order.customer.fullName +
+                              " " +
+                              order.customer.address}
+                          </td>
+                          <td>{order.orderStatus}</td>
+                          <td className="text-center">
+                            <button
+                              onClick={() => togglePop(order.id)}
+                              style={{
+                                padding: "2px 22px",
+                                cursor: "pointer",
+                                backgroundColor: "#FFFFFF",
+                                color: "#3A36DB",
+                                border: "1px solid #3A36DB",
+                                borderRadius: "5px",
+                                fontSize: "14px",
+                              }}
+                            >
+                              Update
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="d-flex align-items-center flex-wrap gap-2 justify-content-between mt-20">
+                  <h6 className="mb-2 fw-bold text-lg mb-0"></h6>
+                  <div className="d-flex align-items-center">
+                    <a
+                      href="#"
+                      className="text-primary-600 hover-text-primary d-flex align-items-center gap-2"
+                      onClick={() => {
+                        const currentPage = parseInt(
+                          queryParams.get("page") || 1,
+                          10
+                        );
+                        if (currentPage > 1) {
+                          updateURL({
+                            ...Object.fromEntries(queryParams),
+                            page: currentPage - 1,
+                          });
+                        }
+                      }}
+                    >
+                      <iconify-icon
+                        icon="solar:alt-arrow-left-linear"
+                        className="icon"
+                        style={{ fontSize: "24px" }}
+                      ></iconify-icon>
+                    </a>
+                    <p
+                      className="text-primary-500 hover-text-primary"
+                      style={{ fontSize: "14px", margin: "0px 12px 0px 12px" }}
+                    >
+                      Page {queryParams.get("page") || 1}
+                    </p>
+                    <a
+                      href="#"
+                      className="text-primary-600 hover-text-primary d-flex align-items-center gap-2"
+                      onClick={() => {
+                        const currentPage = parseInt(
+                          queryParams.get("page") || 1,
+                          10
+                        );
+                        updateURL({
+                          ...Object.fromEntries(queryParams),
+                          page: currentPage + 1,
+                        });
+                      }}
+                    >
+                      <iconify-icon
+                        icon="solar:alt-arrow-right-linear"
+                        className="icon"
+                        style={{ fontSize: "24px" }}
+                      ></iconify-icon>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

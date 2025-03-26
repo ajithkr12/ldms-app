@@ -8,7 +8,7 @@ import Customers from "./pages/Customers";
 import Devices from "./pages/Devices";
 import Orders from "./pages/Orders";
 import Reports from "./pages/Reports";
-import Settings from "./pages/Settings";
+import Settings from "./pages/Settings/Settings";
 import LoginPage from "./pages/LoginPage";
 
 function App() {
@@ -61,6 +61,7 @@ function App() {
                   <Route path="/devices" element={<Devices />} />
                   <Route path="/orders" element={<Orders />} />
                   <Route path="/reports" element={<Reports />} />
+                  {/* <Route path="/settings" element={<Settings />} /> */}
                   <Route path="/settings" element={<Settings />} />
                 </Routes>
 
