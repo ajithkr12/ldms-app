@@ -2,6 +2,7 @@ import React, { useState, useTransition, useEffect } from "react";
 import "./AddUserPopup.css";
 import {
   createDashboardUser,
+  editDashboardUser,
   getAllRoles,
 } from "../../api/dashboardUserServices";
 
@@ -75,6 +76,19 @@ const AddUserPopup = ({
     if (initialData.fullName) {
       // edit user
       // console.log("Edit User : ", updatedUser);
+      const res = await editDashboardUser(
+        initialData.id,
+        name,
+        email,
+        selectedRoleId
+      );
+      if (!res.success) {
+        setError("Error creating user");
+        return; // Stop execution if there is an error
+      }
+      // console.log("Add User : ", updatedUser);
+      await refreshUserList();
+      handleClose();
       return;
     }
     const res = await createDashboardUser(
@@ -142,23 +156,27 @@ const AddUserPopup = ({
               />
             </div>
 
-            <div className="form-group">
-              <input
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            {!initialData.id && (
+              <div className="form-group">
+                <input
+                  type="password"
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            )}
 
-            <div className="form-group">
-              <input
-                type="password"
-                placeholder="Re-type password"
-                value={retypePassword}
-                onChange={(e) => setRetypePassword(e.target.value)}
-              />
-            </div>
+            {!initialData.id && (
+              <div className="form-group">
+                <input
+                  type="password"
+                  placeholder="Re-type password"
+                  value={retypePassword}
+                  onChange={(e) => setRetypePassword(e.target.value)}
+                />
+              </div>
+            )}
 
             <div className="form-group">
               <select

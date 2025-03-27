@@ -56,4 +56,32 @@ export const createDashboardUser = async (name, email, password, roleId) => {
   }
 };
 
+// /users/editDashboardUser
+export const editDashboardUser = async (id, name, email, roleId) => {
+  try {
+    const payload = {
+      id: id,
+      name: name,
+      email: email,
+      roleId: roleId,
+    };
+    const response = await axios.post(url + "users/editDashboardUser", payload);
+    return {
+      success: true,
+      data: response.data,
+      error: null,
+    };
+  } catch (error) {
+    console.error("Error creating dashboard user:", error);
+    return {
+      success: false,
+      data: null,
+      error: error,
+    };
+
+    // throw error;
+    // return error;
+  }
+};
+
 // createDashboardUser;
