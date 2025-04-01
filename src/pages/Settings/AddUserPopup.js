@@ -1,4 +1,4 @@
-import React, { useState, useTransition, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "./AddUserPopup.css";
 import {
   createDashboardUser,
@@ -12,102 +12,105 @@ const AddUserPopup = ({
   refreshUserList,
   initialData = {},
 }) => {
-  const [name, setName] = useState(initialData.fullName || "");
-  const [email, setEmail] = useState(initialData.email || "");
-  const [password, setPassword] = useState(initialData.password || "");
-  const [retypePassword, setRetypePassword] = useState(
-    initialData.password || ""
-  );
-  const [selectedRoleId, setSelectedRoleId] = useState(
-    initialData.roleId || ""
-  );
-  const [masters, setMasters] = useState({
-    roles: [],
+  const [state, setState] = useState({
+    name: initialData.fullName || "",
+    email: initialData.email || "",
+    password: initialData.password || "",
+    retypePassword: initialData.password || "",
+    selectedRoleId: initialData.roleId || "",
+    masters: { roles: [] },
+    error: "",
   });
-  const [error, setError] = useState("");
-  const [masatersLoading, masatersLoader] = useTransition();
 
   const fetchMasters = async () => {
+    if (!show) return;
     const data = await getAllRoles();
-
-    setMasters((prevMasters) => ({
-      ...prevMasters,
-      roles: data,
+    setState((prevState) => ({
+      ...prevState,
+      masters: { roles: data },
     }));
   };
 
   // Update state when initialData changes
   useEffect(() => {
-    console.log("initialData : ", initialData);
-    setName(initialData.fullName || "");
-    setEmail(initialData.email || "");
-    setPassword(initialData.password || "");
-    setRetypePassword(initialData.password || "");
-    setSelectedRoleId(initialData.roleId || "");
+    setState((prevState) => ({
+      ...prevState,
+      name: initialData.fullName || "",
+      email: initialData.email || "",
+      password: initialData.password || "",
+      retypePassword: initialData.password || "",
+      selectedRoleId: initialData.roleId || "",
+    }));
   }, [initialData]);
 
   useEffect(() => {
-    masatersLoader(fetchMasters);
-  }, []);
+    fetchMasters();
+  }, [show]);
 
-  console.log("selectedRoleId : ", selectedRoleId);
+  const handleInputChange = (field, value) => {
+    setState((prevState) => ({
+      ...prevState,
+      [field]: value,
+    }));
+  };
 
   const handleSubmit = async () => {
-    //  VALIDATION LOGIC START
+    const { name, email, password, retypePassword, selectedRoleId } = state;
+
+    // VALIDATION LOGIC START
     if (!name || !email || !password || !retypePassword) {
-      setError("All fields are required");
+      setState((prevState) => ({
+        ...prevState,
+        error: "All fields are required",
+      }));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError("Invalid email format");
+      setState((prevState) => ({
+        ...prevState,
+        error: "Invalid email format",
+      }));
       return;
     }
 
     if (password !== retypePassword) {
-      setError("Passwords do not match");
+      setState((prevState) => ({
+        ...prevState,
+        error: "Passwords do not match",
+      }));
       return;
     }
-    //  VALIDATION LOGIC END
+    // VALIDATION LOGIC END
 
-    // const updatedUser = { name, email, password, roleId: selectedRoleId };
+    const res = initialData.fullName
+      ? await editDashboardUser(initialData.id, name, email, selectedRoleId)
+      : await createDashboardUser(name, email, password, selectedRoleId);
 
-    if (initialData.fullName) {
-      // edit user
-      // console.log("Edit User : ", updatedUser);
-      const res = await editDashboardUser(
-        initialData.id,
-        name,
-        email,
-        selectedRoleId
-      );
-      if (!res.success) {
-        setError("Error creating user");
-        return; // Stop execution if there is an error
-      }
-      // console.log("Add User : ", updatedUser);
-      await refreshUserList();
-      handleClose();
-      return;
-    }
-    const res = await createDashboardUser(
-      name,
-      email,
-      password,
-      selectedRoleId
-    );
     if (!res.success) {
-      setError("Error creating user");
-      return; // Stop execution if there is an error
+      setState((prevState) => ({
+        ...prevState,
+        error: "Error creating user",
+      }));
+      return;
     }
-    // console.log("Add User : ", updatedUser);
+
     await refreshUserList();
     handleClose();
-    // await handleSave(newUser);
   };
 
   if (!show) return null;
+
+  const {
+    name,
+    email,
+    password,
+    retypePassword,
+    selectedRoleId,
+    masters,
+    error,
+  } = state;
 
   return (
     <div className="modal-overlay">
@@ -143,7 +146,7 @@ const AddUserPopup = ({
                 type="text"
                 placeholder="Enter name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => handleInputChange("name", e.target.value)}
               />
             </div>
 
@@ -152,36 +155,41 @@ const AddUserPopup = ({
                 type="email"
                 placeholder="Enter email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => handleInputChange("email", e.target.value)}
               />
             </div>
 
             {!initialData.id && (
-              <div className="form-group">
-                <input
-                  type="password"
-                  placeholder="Enter password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            )}
-
-            {!initialData.id && (
-              <div className="form-group">
-                <input
-                  type="password"
-                  placeholder="Re-type password"
-                  value={retypePassword}
-                  onChange={(e) => setRetypePassword(e.target.value)}
-                />
-              </div>
+              <>
+                <div className="form-group">
+                  <input
+                    type="password"
+                    placeholder="Enter password"
+                    value={password}
+                    onChange={(e) =>
+                      handleInputChange("password", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="form-group">
+                  <input
+                    type="password"
+                    placeholder="Re-type password"
+                    value={retypePassword}
+                    onChange={(e) =>
+                      handleInputChange("retypePassword", e.target.value)
+                    }
+                  />
+                </div>
+              </>
             )}
 
             <div className="form-group">
               <select
                 value={selectedRoleId || ""}
-                onChange={(e) => setSelectedRoleId(e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("selectedRoleId", e.target.value)
+                }
               >
                 <option value="" disabled>
                   Select a role

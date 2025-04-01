@@ -100,3 +100,21 @@ select {
   color: red;
   margin-bottom: 10px;
 }
+
+.resource-access-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.resource-access-table th,
+.resource-access-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.resource-access-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}

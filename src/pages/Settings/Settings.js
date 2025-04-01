@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
+import { useSearchParams } from "react-router-dom";
 import Users from "./Users";
 import Roles from "./Roles";
 
 import "./Settings.css";
 
 const Settings = () => {
-  const [activeTab, setActiveTab] = useState("users");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "users";
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -13,10 +15,13 @@ const Settings = () => {
         return <Users />;
       case "roles":
         return <Roles />;
-
       default:
         return <Users />;
     }
+  };
+
+  const handleTabChange = (tab) => {
+    setSearchParams({ tab });
   };
 
   return (
@@ -26,13 +31,13 @@ const Settings = () => {
         <ul className="d-flex align-items-center gap-2">
           <li
             className={`tab-item ${activeTab === "users" ? "active" : ""}`}
-            onClick={() => setActiveTab("users")}
+            onClick={() => handleTabChange("users")}
           >
             Users
           </li>
           <li
             className={`tab-item ${activeTab === "roles" ? "active" : ""}`}
-            onClick={() => setActiveTab("roles")}
+            onClick={() => handleTabChange("roles")}
           >
             Roles
           </li>

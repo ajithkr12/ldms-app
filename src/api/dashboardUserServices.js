@@ -25,6 +25,55 @@ export const getAllRoles = async () => {
   }
 };
 
+export const getResourcesAndAccessMasters = async () => {
+  try {
+    const response = await axios.get(
+      url + "masters/getResourcesAndAccessMasters"
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
+  }
+};
+
+// /users/createDashboardUser
+export const createRoleAndAssignAccess = async (payload) => {
+  try {
+    const response = await axios.post(
+      url + "users/createRoleAndAssignAccess",
+      payload
+    );
+    return {
+      success: true,
+      data: response.data,
+      error: null,
+    };
+  } catch (error) {
+    console.error("Error creating dashboard user:", error);
+    return {
+      success: false,
+      data: null,
+      error: error,
+    };
+  }
+};
+
+// /users/getRoleResourceAccess
+export const getRoleResourceAccess = async (roleId) => {
+  try {
+    const response = await axios.get(url + `users/getRoleResourceAccess`, {
+      params: {
+        roleId: roleId,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching role resource access:", error);
+    throw error;
+  }
+};
+
 // /users/createDashboardUser
 export const createDashboardUser = async (name, email, password, roleId) => {
   try {
