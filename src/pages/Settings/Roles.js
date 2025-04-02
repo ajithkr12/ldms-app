@@ -12,7 +12,7 @@ const Roles = () => {
 
   const handleClose = () => {
     setShow(false);
-    setEditingRole(null); // Reset editing user when popup is closed
+    setEditingRole(null);
   };
 
   const handleShow = () => setShow(true);
@@ -23,7 +23,8 @@ const Roles = () => {
   };
 
   const fetchRolesList = async () => {
-    if (rolesList.length > 0 || listLoading) return;
+    console.log("fetching roles list");
+
     const data = await getAllRoles();
     // console.log(data);
     setRolesList(data);
@@ -44,8 +45,8 @@ const Roles = () => {
       <AddRolePopup
         show={show}
         handleClose={handleClose}
-        refreshRolesList={() => {
-          listLoader(fetchRolesList);
+        refreshRolesList={async () => {
+          await listLoader(await fetchRolesList);
         }}
         initialData={editingRole || {}}
       />

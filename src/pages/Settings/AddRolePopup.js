@@ -4,10 +4,12 @@ import {
   getResourcesAndAccessMasters,
   createRoleAndAssignAccess,
   getRoleResourceAccess,
+  updateRoleAndAssignAccess,
 } from "../../api/dashboardUserServices";
 
 const AddRolePopup = ({ initialData, show, handleClose, refreshRolesList }) => {
   const [masters, setMasters] = useState({ resources: [], accesses: [] });
+  const [isLoading, setIsLoading] = useState(false);
   const [formState, setFormState] = useState({
     roleName: initialData.label || "",
     resourceAccessMap: [],
@@ -76,6 +78,7 @@ const AddRolePopup = ({ initialData, show, handleClose, refreshRolesList }) => {
   };
 
   const handleSubmit = async () => {
+    setIsLoading(true);
     const { roleName, resourceAccessMap } = formState;
 
     if (!roleName) {
@@ -87,9 +90,18 @@ const AddRolePopup = ({ initialData, show, handleClose, refreshRolesList }) => {
     }
 
     const payload = { roleName, resourceAccessMap };
+    if (initialData.id !== undefined) {
+      payload.roleId = initialData.id;
+      await updateRoleAndAssignAccess(payload);
+      await refreshRolesList();
+      handleClose();
+      setIsLoading(false);
+      return;
+    }
     await createRoleAndAssignAccess(payload);
     await refreshRolesList();
     handleClose();
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -148,9 +160,13 @@ const AddRolePopup = ({ initialData, show, handleClose, refreshRolesList }) => {
           <button className="btn-secondary" onClick={handleClose}>
             Close
           </button>
-          <button className="btn-primary" onClick={handleSubmit}>
-            Save Role
-          </button>
+          {isLoading ? (
+            <>submitting..</>
+          ) : (
+            <button className="btn-primary" onClick={handleSubmit}>
+              Save Role
+            </button>
+          )}
         </div>
       </div>
     </div>

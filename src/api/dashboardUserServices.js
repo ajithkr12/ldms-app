@@ -59,6 +59,28 @@ export const createRoleAndAssignAccess = async (payload) => {
   }
 };
 
+// /users/updateRoleAndAssignAccess
+export const updateRoleAndAssignAccess = async (payload) => {
+  try {
+    const response = await axios.post(
+      url + "users/updateRoleAndAssignAccess",
+      payload
+    );
+    return {
+      success: true,
+      data: response.data,
+      error: null,
+    };
+  } catch (error) {
+    console.error("Error creating dashboard user:", error);
+    return {
+      success: false,
+      data: null,
+      error: error,
+    };
+  }
+};
+
 // /users/getRoleResourceAccess
 export const getRoleResourceAccess = async (roleId) => {
   try {
