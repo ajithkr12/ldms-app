@@ -1,32 +1,84 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom"; // Replace useHistory with useNavigate
 import CustomerForm from "../screens/CustomerForm";
 import CustomerDetails from "../screens/CustomerDetails";
+import { getCustomers } from "../api/customerServices";
+
 const Customers = () => {
-  // State to keep track of the active tab
   const [activeTab, setActiveTab] = useState("tab1");
   const [seen, setSeen] = useState(false);
+  const [pageEnd, setPageEnd] = useState(false);
   const [openCustomerDetails, setOpenCustomerDetails] = useState(false);
+  const [customers, setCustomers] = useState([]);
+  // const [totalPages, setTotalPages] = useState(1);
 
-  // Function to handle tab change
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Extract query parameters from the URL
+  const queryParams = new URLSearchParams(location.search);
+  const currentPage = parseInt(queryParams.get("page") || "1", 10);
+  const searchTerm = queryParams.get("search") || "";
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
   };
-  function togglePop() {
+
+  const togglePop = () => {
     setSeen(!seen);
-  }
-  function togglePopDetails() {
+  };
+
+  const togglePopDetails = () => {
     setOpenCustomerDetails(!openCustomerDetails);
-  }
+  };
+
+  const getData = async () => {
+    const response = await getCustomers({
+      page: currentPage,
+      limit: 10,
+      search: searchTerm,
+    });
+    setPageEnd(response.isEnd);
+    setCustomers(response.customers);
+  };
+
+  useEffect(() => {
+    getData();
+  }, [currentPage, searchTerm]);
+
+  const updateURL = (params) => {
+    const newParams = new URLSearchParams(location.search);
+    Object.keys(params).forEach((key) => {
+      if (params[key] !== null && params[key] !== undefined) {
+        newParams.set(key, params[key]);
+      } else {
+        newParams.delete(key);
+      }
+    });
+    navigate({ search: newParams.toString() }); // Use navigate instead of history.push
+  };
+
+  const handleSearch = (e) => {
+    updateURL({ search: e.target.value, page: 1 });
+  };
+
+  const handlePageChange = (direction) => {
+    if (direction === "prev" && currentPage > 1) {
+      updateURL({ page: currentPage - 1 });
+    } else if (direction === "next") {
+      updateURL({ page: currentPage + 1 });
+    }
+  };
+
   return (
-    <div class="dashboard-main-body">
+    <div className="dashboard-main-body">
       {seen ? <CustomerForm toggle={togglePop} /> : null}
       {openCustomerDetails ? (
         <CustomerDetails toggle={togglePopDetails} />
       ) : null}
 
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
-        {/* START */}
-        <div style={{ marginBottom: "00px" }}>
+        {/* <div style={{ marginBottom: "00px" }}>
           <button
             onClick={() => handleTabChange("tab1")}
             style={{
@@ -68,27 +120,22 @@ const Customers = () => {
           >
             All
           </button>
-        </div>
-        {/* END */}
-        {/* <ul className="d-flex align-items-center gap-2">
-          <li className="fw-medium">
-            <a
-              href="index.html"
-              className="d-flex align-items-center gap-1 hover-text-primary"
-            >
-              <iconify-icon
-                icon="solar:home-smile-angle-outline"
-                className="icon text-lg"
-              ></iconify-icon>
-              Customers
-            </a>
-          </li>
-          <li>-</li>
-          <li className="fw-medium">Investment</li> 
-        </ul> */}
+        </div> */}
 
         <div>
-          <button
+          <input
+            type="text"
+            placeholder="Search customers..."
+            value={searchTerm}
+            onChange={handleSearch}
+            style={{
+              padding: "4px 12px",
+              marginRight: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "5px",
+            }}
+          />
+          {/* <button
             onClick={togglePop}
             style={{
               padding: "4px 22px",
@@ -101,173 +148,80 @@ const Customers = () => {
               flexDirection: "row",
             }}
           >
-            {/* <iconify-icon
-              icon="material-symbols:add-rounded"
-              class="icon"
-            ></iconify-icon> */}
             Add New
-          </button>
+          </button> */}
         </div>
       </div>
 
-      <div class="row gy-4 h-100">
-        <div class="col-xxl-12">
-          <div class="card h-100">
-            <div class="card-body p-24">
-              <div class="d-flex align-items-center flex-wrap gap-2 justify-content-between mb-20">
-                <h6 class="mb-2 fw-bold text-lg mb-0">Latest Notifications</h6>
-                {/* <a
-                href="#"
-                class="text-primary-600 hover-text-primary d-flex align-items-center gap-1"
-              >
-                View All
-                <iconify-icon
-                  icon="solar:alt-arrow-right-linear"
-                  class="icon"
-                ></iconify-icon>
-              </a> */}
+      <div className="row gy-4 h-100">
+        <div className="col-xxl-12">
+          <div className="card h-100">
+            <div className="card-body p-24">
+              <div className="d-flex align-items-center flex-wrap gap-2 justify-content-between mb-20">
+                <h6 className="mb-2 fw-bold text-lg mb-0">Customer List</h6>
               </div>
-              <div class="table-responsive scroll-sm">
-                <table class="table bordered-table sm-table mb-0">
+              <div className="table-responsive scroll-sm">
+                <table className="table bordered-table sm-table mb-0">
                   <thead>
                     <tr>
                       <th scope="col">Sl.No</th>
-                      <th scope="col">Customes ID</th>
-                      <th scope="col">Cus.Name</th>
-                      <th scope="col">Location</th>
-                      <th scope="col">Details 1 </th>
-                      <th scope="col" class="text-center">
-                        No.of Devices
-                      </th>
+                      <th scope="col">Name</th>
+                      <th scope="col">Email</th>
+                      <th scope="col">Address</th>
+                      <th scope="col">Registration Number</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>1</td>
-                      <td>
-                        <h6
-                          class="text-md mb-0 fw-normal text-decoration-underline cursor-pointer"
-                          onClick={togglePopDetails}
-                        >
-                          DVS23458987IN
-                        </h6>
-                      </td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">John Wick</h6>
-                        <span class="text-sm text-secondary-light fw-normal">
-                          Sample
-                        </span>
-                      </td>
-                      <td>1234 Elm Street, Suite 100</td>
-                      <td>Parameter</td>
-                      <td class="text-center">2</td>
-                    </tr>
-
-                    <tr>
-                      <td>2</td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal text-decoration-underline cursor-pointer">
-                          DVS23458987IN
-                        </h6>
-                      </td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">Jane Smith</h6>
-                        <span class="text-sm text-secondary-light fw-normal">
-                          Sample
-                        </span>
-                      </td>
-                      <td>5678 Maple Avenue, Apt. 202,</td>
-                      <td>Parameter</td>
-                      <td class="text-center">1</td>
-                    </tr>
-
-                    <tr>
-                      <td>3</td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal text-decoration-underline cursor-pointer">
-                          DVS23458987IN
-                        </h6>
-                      </td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">Michael Johnson</h6>
-                        <span class="text-sm text-secondary-light fw-normal">
-                          Sample
-                        </span>
-                      </td>
-                      <td>1298 oak Street, Suite 100</td>
-                      <td>Parameter</td>
-                      <td class="text-center">1</td>
-                    </tr>
-
-                    <tr>
-                      <td>4</td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal text-decoration-underline cursor-pointer">
-                          DVS23458987IN
-                        </h6>
-                      </td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">Emily Davis</h6>
-                        <span class="text-sm text-secondary-light fw-normal">
-                          Sample
-                        </span>
-                      </td>
-                      <td>1234 ref Street, Suite 100</td>
-                      <td>Parameter</td>
-                      <td class="text-center">1</td>
-                    </tr>
-
-                    <tr>
-                      <td>5</td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal text-decoration-underline cursor-pointer">
-                          DVS23458987IN
-                        </h6>
-                      </td>
-                      <td>
-                        <h6 class="text-md mb-0 fw-normal">William Brown</h6>
-                        <span class="text-sm text-secondary-light fw-normal">
-                          Sample
-                        </span>
-                      </td>
-                      <td>5555 Birch Lane, Floor 3</td>
-                      <td>Parameter</td>
-                      <td class="text-center">2</td>
-                    </tr>
+                    {customers.map((customer, index) => (
+                      <tr key={customer.id}>
+                        <td>{(currentPage - 1) * 10 + index + 1}</td>
+                        <td>{customer.fullName}</td>
+                        <td>{customer.email}</td>
+                        <td>{customer.address || "N/A"}</td>
+                        <td>{customer.registrationNumber}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
 
-              <div class="d-flex align-items-center flex-wrap gap-2 justify-content-between mt-20">
-                <h6 class="mb-2 fw-bold text-lg mb-0"></h6>
-                <div class="d-flex align-items-center">
-                  <a
-                    href="#"
-                    class="text-primary-600 hover-text-primary d-flex align-items-center gap-2"
-                  >
-                    <iconify-icon
-                      icon="solar:alt-arrow-left-linear"
-                      class="icon"
-                      style={{ fontSize: "24px" }}
-                    ></iconify-icon>
-                  </a>
-                  <p
-                    class="text-primary-500 hover-text-primary"
-                    style={{ fontSize: "14px", margin: "0px 12px 0px 12px" }}
-                  >
-                    Page 1
-                  </p>
-                  <a
-                    href="#"
-                    class="text-primary-600 hover-text-primary d-flex align-items-center gap-2"
-                  >
-                    <iconify-icon
-                      icon="solar:alt-arrow-right-linear"
-                      class="icon"
-                      style={{ fontSize: "24px" }}
-                    ></iconify-icon>
-                  </a>
-                </div>
+              <div className="d-flex align-items-center flex-wrap gap-2 justify-content-between mt-20">
+                <button
+                  onClick={() => handlePageChange("prev")}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: "4px 12px",
+                    cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                    backgroundColor: currentPage === 1 ? "#ccc" : "#007bff",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "5px",
+                  }}
+                >
+                  Previous
+                </button>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    margin: "0px 12px",
+                  }}
+                >
+                  Page {currentPage}
+                </p>
+                <button
+                  onClick={() => handlePageChange("next")}
+                  disabled={pageEnd}
+                  style={{
+                    padding: "4px 12px",
+                    cursor: pageEnd ? "not-allowed" : "pointer",
+                    backgroundColor: pageEnd ? "#ccc" : "#007bff",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "5px",
+                  }}
+                >
+                  Next
+                </button>
               </div>
             </div>
           </div>

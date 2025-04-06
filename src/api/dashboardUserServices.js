@@ -155,4 +155,44 @@ export const editDashboardUser = async (id, name, email, roleId) => {
   }
 };
 
+// /auth/login
+export const login = async (email, password) => {
+  try {
+    const payload = {
+      email: email,
+      password: password,
+    };
+    const response = await axios.post(url + "auth/login", payload);
+
+    // Store the JWT token in localStorage
+    if (response.data && response.data.token) {
+      localStorage.setItem("jwtToken", response.data.token);
+    }
+
+    return {
+      success: true,
+      data: response.data,
+      error: null,
+    };
+  } catch (error) {
+    console.error("Error during login:", error);
+    return {
+      success: false,
+      data: null,
+      error: error,
+    };
+  }
+};
+
+export const isLoggedIn = () => {
+  const token = localStorage.getItem("jwtToken");
+  console.log("TOKEN", token);
+  return token !== null; // Returns true if the token exists, false otherwise
+};
+
+export const logout = () => {
+  console.log("REMOVED TOKEN");
+  localStorage.removeItem("jwtToken"); // Remove the JWT token from localStorage
+};
+
 // createDashboardUser;

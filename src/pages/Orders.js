@@ -142,83 +142,56 @@ const Orders = () => {
             All
           </button>
         </div>
+      </div>
 
-        <div className="page-search">
-          <div className="row">
-            <div className="col-lg-4">
-              <div className="navbar-search">
-                <input type="text" name="search" placeholder="Search" />
-                <iconify-icon
-                  icon="ion:search-outline"
-                  className="icon"
-                ></iconify-icon>
-              </div>
+      <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
+        <div className="d-flex align-items-center gap-4">
+          {/* <div className="navbar-search" style={{ width: "450px" }}>
+            <input type="text" name="search" placeholder="Search" />
+            <iconify-icon
+              icon="ion:search-outline"
+              className="icon"
+            ></iconify-icon>
+          </div> */}
+          <div className="card h-100">
+            <div className="card-body p-10">
+              <input
+                type="date"
+                name="startDate"
+                value={startDate}
+                onChange={(e) => handleDateChange(e.target.value, endDate)}
+                placeholder="Start Date"
+              />
             </div>
           </div>
-
-          <input
-            type="date"
-            name="startDate"
-            value={startDate}
-            onChange={(e) => handleDateChange(e.target.value, endDate)}
-            placeholder="Start Date"
-          />
-          <input
-            type="date"
-            name="endDate"
-            value={endDate}
-            onChange={(e) => handleDateChange(startDate, e.target.value)}
-            placeholder="End Date"
-          />
+          <div className="card h-100">
+            <div className="card-body p-10">
+              <input
+                type="date"
+                name="endDate"
+                value={endDate}
+                onChange={(e) => handleDateChange(startDate, e.target.value)}
+                placeholder="End Date"
+              />
+            </div>
+          </div>
+          <select
+            style={{ width: "200px" }}
+            className="form-select"
+            value={orderTypeTab}
+            onChange={(e) => handleOrderTabChange(e.target.value)}
+          >
+            <option value="">All</option>
+            <option value="ORDERED">New Orders</option>
+            <option value="ORDER_CONFIRMED">Order Confirmed</option>
+            <option value="OUT_OF_DELIVERY">Out For Delivery</option>
+            <option value="DELIVERED">Delivered</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
         </div>
       </div>
 
       <div className="row gy-4">
-        <div className="col-xxl-3">
-          <div className="card h-100">
-            <div className="card-body p-24">
-              <div className="d-flex align-items-center flex-wrap gap-2 justify-content-between mb-20">
-                <IconRightButton
-                  text="All"
-                  activeTabValue={orderTypeTab}
-                  tabValue=""
-                  onClick={() => handleOrderTabChange("")}
-                />
-                <IconRightButton
-                  text="New Orders"
-                  activeTabValue={orderTypeTab}
-                  tabValue="ORDERED"
-                  onClick={() => handleOrderTabChange("ORDERED")}
-                />
-                <IconRightButton
-                  text="Order Confirmed"
-                  activeTabValue={orderTypeTab}
-                  tabValue="ORDER_CONFIRMED"
-                  onClick={() => handleOrderTabChange("ORDER_CONFIRMED")}
-                />
-                <IconRightButton
-                  text="Out For Delivery"
-                  activeTabValue={orderTypeTab}
-                  tabValue="OUT_OF_DELIVERY"
-                  onClick={() => handleOrderTabChange("OUT_OF_DELIVERY")}
-                />
-                <IconRightButton
-                  text="Delivered"
-                  activeTabValue={orderTypeTab}
-                  tabValue="DELIVERED"
-                  onClick={() => handleOrderTabChange("DELIVERED")}
-                />
-                <IconRightButton
-                  text="Cancelled"
-                  activeTabValue={orderTypeTab}
-                  tabValue="CANCELLED"
-                  onClick={() => handleOrderTabChange("CANCELLED")}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
         {listLoading ? (
           <div className="col-xxl-9 d-flex justify-content-center align-items-center">
             <div className="spinner-border" role="status">
@@ -226,7 +199,7 @@ const Orders = () => {
             </div>
           </div>
         ) : (
-          <div className="col-xxl-9">
+          <div className="col-xxl-12">
             <div className="card h-100">
               <div className="card-body p-24">
                 <div className="d-flex align-items-center flex-wrap gap-2 justify-content-between mb-20">

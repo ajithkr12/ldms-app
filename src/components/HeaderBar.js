@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { logout } from "../api/dashboardUserServices";
 
 function HeaderBar({
   toggleSidebar,
@@ -39,13 +40,13 @@ function HeaderBar({
                 class="icon"
               ></iconify-icon>
             </button>
-            <form class="navbar-search">
+            {/* <form class="navbar-search">
               <input type="text" name="search" placeholder="Search" />
               <iconify-icon
                 icon="ion:search-outline"
                 class="icon"
               ></iconify-icon>
-            </form>
+            </form> */}
           </div>
         </div>
         <div class="col-auto">
@@ -277,7 +278,8 @@ function HeaderBar({
                   <li>
                     <a
                       class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-danger d-flex align-items-center gap-3"
-                      href="javascript:void(0)"
+                      // href="javascript:void(0)"
+                      onClick={logout}
                     >
                       <iconify-icon
                         icon="lucide:power"
